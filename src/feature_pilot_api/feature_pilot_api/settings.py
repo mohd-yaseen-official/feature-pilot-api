@@ -28,7 +28,8 @@ INSTALLED_APPS = [
 
     'projects',
     'feedbacks',
-    'proposals'
+    'proposals',
+    'ai_agent'
 ]
 
 MIDDLEWARE = [

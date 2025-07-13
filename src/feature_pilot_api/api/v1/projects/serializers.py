@@ -3,19 +3,21 @@ from projects.models import Project
 
 
 class ProjectSerializer(serializers.ModelSerializer):
-    github_token = serializers.SerializerMethodField(read_only=True)
+    github_token = serializers.CharField(write_only=True)
 
     class Meta:
         model = Project
         fields = ['id', 'title', 'github_token', 'github_repo_path', 'user', 'is_deleted', 'project_key']
-        read_only_fields = ['id', 'github_token', 'is_deleted', 'project_key']
+        read_only_fields = ['id', 'is_deleted', 'project_key', 'user']
 
-    def get_github_token(self, obj):
-        token = obj.github_token
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        token = instance.github_token
         if not token or len(token) < 8:
-            return '*' * len(token)
-        return f'{token[:4]}...{token[-4:]}'
-
+            data['github_token'] = '*' * len(token) if token else ''
+        else:
+            data['github_token'] = f'{token[:4]}...{token[-4:]}'
+        return data
 
     def create(self, validated_data):
         user = validated_data.get('user') or self.context.get('request').user

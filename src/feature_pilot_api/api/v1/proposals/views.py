@@ -5,7 +5,6 @@ from rest_framework import status
 from .serializers import ProposalSerializer
 from proposals.models import Proposal
 from projects.models import Project
-from datetime import datetime
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -56,52 +55,24 @@ def confirm_proposal(request, proposal_id):
             'message': 'Proposal not found.'
         }, status=status.HTTP_404_NOT_FOUND)
     
-    # Check if user owns the project
     if proposal.feedback.project.user != request.user:
         return Response({
             'status': 403,
             'message': 'You do not have permission to confirm this proposal.'
         }, status=status.HTTP_403_FORBIDDEN)
     
-    # Check if proposal is already confirmed
     if proposal.is_confirmed:
         return Response({
             'status': 400,
             'message': 'Proposal is already confirmed.'
         }, status=status.HTTP_400_BAD_REQUEST)
     
-    # Update proposal status
     proposal.is_confirmed = True
     proposal.status = 'confirmed'
     proposal.save()
     
-    # TODO: Trigger AI agent to apply changes
-    # This is where you would integrate with your FeedbackToFeatureAgent
-    # For now, we'll just update the status to 'applied' as a placeholder
-    
-    try:
-        # Placeholder for AI agent integration
-        # agent = FeedbackToFeatureAgent()
-        # results = agent.apply_changes(proposal.proposal_data)
-        
-        # For now, just mark as applied
-        proposal.status = 'applied'
-        proposal.applied_at = datetime.now()
-        proposal.pr_url = "https://github.com/example/pull/123"  # Placeholder
-        proposal.save()
-        
-        return Response({
-            'status': 200,
-            'message': 'Proposal confirmed and changes applied successfully.',
-            'data': ProposalSerializer(proposal).data
-        }, status=status.HTTP_200_OK)
-        
-    except Exception as e:
-        proposal.status = 'failed'
-        proposal.save()
-        
-        return Response({
-            'status': 500,
-            'message': 'Error applying changes.',
-            'error': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return Response({
+        'status': 200,
+        'message': 'Proposal confirmed. Changes are being applied in the background.',
+        'data': ProposalSerializer(proposal).data
+    }, status=status.HTTP_200_OK)

@@ -46,9 +46,21 @@ def create_feedback(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def list_feedbacks(request, id):
+def list_all_feedbacks(request):
+    feedbacks = Feedback.objects.filter(project__user=request.user)
+    serializer = FeedbackSerializer(feedbacks, many=True)
+    
+    return Response({
+        'status': 200,
+        'message': 'All feedbacks retrieved successfully.',
+        'data': serializer.data
+    }, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_feedbacks(request, project_id):
     try:
-        project = Project.objects.get(id=id)
+        project = Project.objects.get(id=project_id)
     except Project.DoesNotExist:
         return Response({
             'status': 404,
@@ -69,6 +81,3 @@ def list_feedbacks(request, id):
         'message': 'Project feedbacks retrieved successfully.',
         'data': serializer.data
     }, status=status.HTTP_200_OK)
-
-
-
